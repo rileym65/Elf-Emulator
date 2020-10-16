@@ -859,8 +859,6 @@ void disassemble(word start,word count) {
 
 void debug_da(char* buffer) {
   word count;
-  int lc;
-  lc = 0;
   count = 16;
   buffer = getAddress(buffer,&lastAddr);
   if (*buffer == ',') {
@@ -1084,7 +1082,7 @@ void debug_ds(char* buffer) {
   adr = 0;
   p = 0;
   for (i=0; i<16; i++) {
-    sprintf(buf,"%04x: ",adr);
+    sprintf((char*)buf,"%04x: ",adr);
     adr+=4096;
     for (j=0; j<16; j++) {
       t = 0;
@@ -1093,11 +1091,11 @@ void debug_ds(char* buffer) {
         t |= romMap[p];
         r |= ramMap[p++];
         }
-      if (t) strcat(buf,"R ");
-        else if (r) strcat(buf,". ");
-          else strcat(buf,"  ");
+      if (t) strcat((char*)buf,"R ");
+        else if (r) strcat((char*)buf,". ");
+          else strcat((char*)buf,"  ");
       }
-    debugDisplay(buf);
+    debugDisplay((char*)buf);
     }
   }
 

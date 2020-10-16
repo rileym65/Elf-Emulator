@@ -14,9 +14,10 @@
 #define _CHARSET
 #endif
 
-#include <librcs.h>
+#include "librcs.h"
 #include "elf.h"
 #include <fcntl.h>
+#include <string.h>
 
 /* rcs_GC       gc; */
 rcs_Event    event;
@@ -150,16 +151,16 @@ void vt100ScrollUp() {
 void showCursor() {
   rcs_GC gc;
   gc = rcs_openGC(display,vt100Buffer);
-  rcs_drawPixmap(display,vt100Buffer,gc,curPos<<3,curLine<<4,icharset[vidRam[curLine][curPos]]);
-  rcs_drawPixmap(display,vt100Window,gc,curPos<<3,curLine<<4,icharset[vidRam[curLine][curPos]]);
+  rcs_drawPixmap(display,vt100Buffer,gc,curPos<<3,curLine<<4,(const char**)icharset[vidRam[curLine][curPos]]);
+  rcs_drawPixmap(display,vt100Window,gc,curPos<<3,curLine<<4,(const char**)icharset[vidRam[curLine][curPos]]);
   rcs_closeGC(display,gc);
   }
 
 void removeCursor() {
   rcs_GC gc;
   gc = rcs_openGC(display,vt100Buffer);
-  rcs_drawPixmap(display,vt100Buffer,gc,curPos<<3,curLine<<4,charset[vidRam[curLine][curPos]]);
-  rcs_drawPixmap(display,vt100Window,gc,curPos<<3,curLine<<4,charset[vidRam[curLine][curPos]]);
+  rcs_drawPixmap(display,vt100Buffer,gc,curPos<<3,curLine<<4,(const char**)charset[vidRam[curLine][curPos]]);
+  rcs_drawPixmap(display,vt100Window,gc,curPos<<3,curLine<<4,(const char**)charset[vidRam[curLine][curPos]]);
   rcs_closeGC(display,gc);
   }
 
@@ -284,8 +285,8 @@ void vt100Display(int byt) {
         gc = rcs_openGC(display,vt100Window);
         for (i=curPos; i<80; i++) {
           vidRam[curLine][i] = 32;
-          rcs_drawPixmap(display,vt100Buffer,gc,i<<3,curLine<<4,charset[vidRam[curLine][i]]);
-          rcs_drawPixmap(display,vt100Window,gc,i<<3,curLine<<4,charset[vidRam[curLine][i]]);
+          rcs_drawPixmap(display,vt100Buffer,gc,i<<3,curLine<<4,(const char**)charset[vidRam[curLine][i]]);
+          rcs_drawPixmap(display,vt100Window,gc,i<<3,curLine<<4,(const char**)charset[vidRam[curLine][i]]);
           }
         rcs_closeGC(display,gc);
         escPos = -1;
@@ -294,8 +295,8 @@ void vt100Display(int byt) {
         gc = rcs_openGC(display,vt100Window);
         for (i=0; i<=curPos; i++) {
           vidRam[curLine][i] = 32;
-          rcs_drawPixmap(display,vt100Buffer,gc,i<<3,curLine<<4,charset[vidRam[curLine][i]]);
-          rcs_drawPixmap(display,vt100Window,gc,i<<3,curLine<<4,charset[vidRam[curLine][i]]);
+          rcs_drawPixmap(display,vt100Buffer,gc,i<<3,curLine<<4,(const char**)charset[vidRam[curLine][i]]);
+          rcs_drawPixmap(display,vt100Window,gc,i<<3,curLine<<4,(const char**)charset[vidRam[curLine][i]]);
           }
         rcs_closeGC(display,gc);
         escPos = -1;
@@ -304,8 +305,8 @@ void vt100Display(int byt) {
         gc = rcs_openGC(display,vt100Window);
         for (i=0; i<80; i++) {
           vidRam[curLine][i] = 32;
-          rcs_drawPixmap(display,vt100Buffer,gc,i<<3,curLine<<4,charset[vidRam[curLine][i]]);
-          rcs_drawPixmap(display,vt100Window,gc,i<<3,curLine<<4,charset[vidRam[curLine][i]]);
+          rcs_drawPixmap(display,vt100Buffer,gc,i<<3,curLine<<4,(const char**)charset[vidRam[curLine][i]]);
+          rcs_drawPixmap(display,vt100Window,gc,i<<3,curLine<<4,(const char**)charset[vidRam[curLine][i]]);
           }
         rcs_closeGC(display,gc);
         escPos = -1;
@@ -376,8 +377,8 @@ void vt100Display(int byt) {
     }
   if (byt == 0x7f) return;
   gc = rcs_openGC(display,vt100Buffer);
-  rcs_drawPixmap(display,vt100Buffer,gc,curPos<<3,curLine<<4,charset[byt]);
-  rcs_drawPixmap(display,vt100Window,gc,curPos<<3,curLine<<4,charset[byt]);
+  rcs_drawPixmap(display,vt100Buffer,gc,curPos<<3,curLine<<4,(const char**)charset[byt]);
+  rcs_drawPixmap(display,vt100Window,gc,curPos<<3,curLine<<4,(const char**)charset[byt]);
   rcs_closeGC(display,gc);
   vidRam[curLine][curPos] = byt;
   if (++curPos == 80) {
@@ -404,6 +405,12 @@ void vt100Event(rcs_Event event) {
           event.d1 == KEY_CTRL_R) {
         ctrlState = 1;
         event.d1 = 0;
+        }
+      else if (event.d1 == KEY_F1) {
+printf("F1 pressed\n");
+        }
+      else if (event.d1 == KEY_F2) {
+printf("F2 pressed\n");
         }
       else if (event.d1 == KEY_BACK_SP) event.d1 = 8;
       else if (event.d1 == KEY_TAB) event.d1 = 9;

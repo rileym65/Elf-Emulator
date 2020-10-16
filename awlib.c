@@ -816,7 +816,7 @@ void  rcs_drawPixmap(rcs_Display* d,rcs_Window win,rcs_GC gc,int dx,int dy,const
   COLORREF   colors[10000];
 #endif
   none=-1;
-  _rcs_buildColors(d,colors,data,&none);
+  _rcs_buildColors(d,colors,(char**)data,&none);
   sscanf(data[0],"%d %d %d %d",&sizeX,&sizeY,&numColors,&bytesPer);
 #ifdef WIN32
   if (_rcs_isBitmap(win)==TRUE) {

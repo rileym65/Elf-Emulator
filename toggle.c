@@ -37,8 +37,8 @@ int toggleGetState(TOGGLE* t) {
 void togglePaint(TOGGLE* t,rcs_Display* display,rcs_Window win) {
   rcs_GC gc;
   gc=rcs_openGC(display,win);
-  if (t->state) rcs_drawPixmap(display,win,gc,t->x,t->y,swup_xpm);
-    else rcs_drawPixmap(display,win,gc,t->x,t->y,swdn_xpm);
+  if (t->state) rcs_drawPixmap(display,win,gc,t->x,t->y,(const char**)swup_xpm);
+    else rcs_drawPixmap(display,win,gc,t->x,t->y,(const char**)swdn_xpm);
   rcs_closeGC(display,gc);
   }
 

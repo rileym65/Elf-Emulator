@@ -33,7 +33,7 @@ int matrix[] = { 0x093f,         /* 0 */
 rcs_Pixmap til311Init(rcs_Display* display,rcs_Window win) {
   rcs_Pixmap ret;
   ret=rcs_createPixmap(display,win,83,131);
-  rcs_drawPixmap(display,ret,gc,0,0,til311_xpm);
+  rcs_drawPixmap(display,ret,gc,0,0,(const char**)til311_xpm);
   return ret;
   }
 

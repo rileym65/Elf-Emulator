@@ -40,11 +40,9 @@ byte minimon[] = { 0xf8, 0xff, 0xa1, 0xe1, 0x6c, 0x64, 0xa3, 0x21,
 
 portStruct parseArgs(char* arg) {
   int        i;
-  int        ip;
   int        op;
   int        ef;
   portStruct ret;
-  ip = 0;
   op = 0;
   ef = 0;
   for (i=0; i<7; i++) {
@@ -225,7 +223,7 @@ if (memTrap == 1 && addr >= 0x203d && addr <= 0x3060) {
     return;
     }
   if (romMap[addr >> 3] & (1<<(addr & 7))) return;
-  if (!ramMap[addr >> 3] & (1<<(addr & 7))) return;
+  if (!(ramMap[addr >> 3] & (1<<(addr & 7)))) return;
   if (usePager == 'Y') {
     extAddr = (pager[addr>>12] << 12) | (addr &0xfff);
     ram[extAddr] = value;
@@ -1170,14 +1168,14 @@ memTrap = 0;
   screen=rcs_createPixmap(display,window,wx,wy);
 
   gc=rcs_openGC(display,screen);
-  if (computer == '2') rcs_drawPixmap(display,screen,gc,0,0,elf2_xpm);
-  else if (computer == 'S') rcs_drawPixmap(display,screen,gc,0,0,superelf_xpm);
-  else if (computer == 'T') rcs_drawPixmap(display,screen,gc,0,0,studio2_xpm);
-  else if (computer == 'X') rcs_drawPixmap(display,screen,gc,0,0,comx35_xpm);
-  else rcs_drawPixmap(display,screen,gc,0,0,elf_xpm);
+  if (computer == '2') rcs_drawPixmap(display,screen,gc,0,0,(const char**)elf2_xpm);
+  else if (computer == 'S') rcs_drawPixmap(display,screen,gc,0,0,(const char**)superelf_xpm);
+  else if (computer == 'T') rcs_drawPixmap(display,screen,gc,0,0,(const char**)studio2_xpm);
+  else if (computer == 'X') rcs_drawPixmap(display,screen,gc,0,0,(const char**)comx35_xpm);
+  else rcs_drawPixmap(display,screen,gc,0,0,(const char**)elf_xpm);
   til311 = til311Init(display,window);
   if (eprom == 'Y' && computer == '1')
-    rcs_drawPixmap(display,screen,gc,13,15,eprom_xpm);
+    rcs_drawPixmap(display,screen,gc,13,15,(const char**)eprom_xpm);
 
   rcs_copyArea(display,screen,window,gc,0,0,wx,wy,0,0);
 
@@ -1191,7 +1189,7 @@ memTrap = 0;
   debugWindow=rcs_createWindow(display,rcs_rootWindow(display),10,10,640,480);
   rcs_setWindowName(display,debugWindow,"Elf Debugger");
   debugBuffer=rcs_createPixmap(display,debugWindow,640,480);
-  rcs_drawPixmap(display,debugBuffer,gc,0,0,debug_xpm);
+  rcs_drawPixmap(display,debugBuffer,gc,0,0,(const char**)debug_xpm);
   if (debugMode == 'Y') {
     rcs_showWindow(display,debugWindow);
     rcs_copyArea(display,debugBuffer,debugWindow,gc,0,0,353,480,0,0);
@@ -1234,7 +1232,7 @@ memTrap = 0;
     rcs_showWindow(display,hexWindow);
     rcs_moveWindow(display,hexWindow,hexX,hexY);
     hexBuffer=rcs_createPixmap(display,hexWindow,178,229);
-    rcs_drawPixmap(display,hexBuffer,gc,0,0,hexpad_xpm);
+    rcs_drawPixmap(display,hexBuffer,gc,0,0,(const char**)hexpad_xpm);
     rcs_copyArea(display,hexBuffer,hexWindow,gc,0,0,353,480,0,0);
     nextNybble='H';
     keypadValue=0;
@@ -1252,7 +1250,7 @@ memTrap = 0;
     rcs_setWindowName(display,ledWindow,"Elf LED Module");
     rcs_showWindow(display,ledWindow);
     ledBuffer=rcs_createPixmap(display,ledWindow,156,116);
-    rcs_drawPixmap(display,ledBuffer,gc,0,0,led_xpm);
+    rcs_drawPixmap(display,ledBuffer,gc,0,0,(const char**)led_xpm);
     rcs_copyArea(display,ledBuffer,ledWindow,gc,0,0,156,116,0,0);
     for (i=0;i<8;i++) {
       led[i]=redLedNew();
@@ -1266,7 +1264,7 @@ memTrap = 0;
     rcs_setWindowName(display,hexOutWindow,"Elf Hex Module");
     rcs_showWindow(display,hexOutWindow);
     hexOutBuffer=rcs_createPixmap(display,hexOutWindow,178,102);
-    rcs_drawPixmap(display,hexOutBuffer,gc,0,0,hex_xpm);
+    rcs_drawPixmap(display,hexOutBuffer,gc,0,0,(const char**)hex_xpm);
     rcs_copyArea(display,hexOutBuffer,hexOutWindow,gc,0,0,178,102,0,0);
     for (i=0;i<4;i++) {
       hexDisp[i]=til311New();

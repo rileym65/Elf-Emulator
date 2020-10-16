@@ -46,7 +46,7 @@ byte comxEF() {
   }
 
 byte comxIn() {
-  byte ret;
+  word ret;
   keyboardEF = 1;
   ret = keyboardValue;
 if (ret == 13) {
@@ -96,7 +96,7 @@ if (ret == 8) {
 #endif
 
     }
-  return ret;
+  return ret & 0xff;
   }
 
 void comxCycle() {

@@ -25,13 +25,13 @@ void v6845Write(word addr,byte value) {
   gc = rcs_openGC(display,v6845Buffer);
   if (value < 32) value += '@';
   if (!(value & 128)) {
-    rcs_drawPixmap(display,v6845Buffer,gc,x,y,charset[value]);
-    rcs_drawPixmap(display,v6845Window,gc,x,y,charset[value]);
+    rcs_drawPixmap(display,v6845Buffer,gc,x,y,(const char**)charset[value]);
+    rcs_drawPixmap(display,v6845Window,gc,x,y,(const char**)charset[value]);
     } else {
     value &= 0x7f;
     if (value < 32) value += '@';
-    rcs_drawPixmap(display,v6845Buffer,gc,x,y,icharset[value]);
-    rcs_drawPixmap(display,v6845Window,gc,x,y,icharset[value]);
+    rcs_drawPixmap(display,v6845Buffer,gc,x,y,(const char**)icharset[value]);
+    rcs_drawPixmap(display,v6845Window,gc,x,y,(const char**)icharset[value]);
     }
   rcs_closeGC(display,gc); 
   }

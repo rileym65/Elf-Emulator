@@ -37,8 +37,8 @@ int pushGetState(PUSH* t) {
 void pushPaint(PUSH* t,rcs_Display* display,rcs_Window win) {
   rcs_GC gc;
   gc=rcs_openGC(display,win);
-  if (!t->state) rcs_drawPixmap(display,win,gc,t->x,t->y,pushup_xpm);
-    else rcs_drawPixmap(display,win,gc,t->x,t->y,pushdn_xpm);
+  if (!t->state) rcs_drawPixmap(display,win,gc,t->x,t->y,(const char**)pushup_xpm);
+    else rcs_drawPixmap(display,win,gc,t->x,t->y,(const char**)pushdn_xpm);
   rcs_closeGC(display,gc);
   }
 
