@@ -1,0 +1,530 @@
+-1805    Enable 1805 instructions (timer not currently supported)
+-1861    Enable 1861 Pixie graphics
+-1870    Enable CDP1869/70 graphics mode
+-6847    Enable 6847 graphics
+-6847=32 Enable 6847 graphics in 32 column mode
+-9918    Enable TMS9918 graphics
+-9918g   Enable TMS9918 graphics in grayscale mode
+-a       Disable address display in run mode (improves performance)
+-c freq  Set frequency of clock
+-comx    Enable Comx-35 mode, implies -1870 and -R comx35.rom
+-d       Enable debugging mode
+-disk=file Specify which disk file to use for the ide image
+           Default is disk1.ide
+-dlog    Log debug trace to debug.log
+-e       Enable extended ports
+-elf2    Simulate an Elf II
+-ems     Enable 512k EMS extension
+-fdc     Enable disk 1793 controller
+-ide     Enable IDE disk controller
+-ide=(trks,hds,secs)
+         Specify geometry for virtual ide drives
+-k       Enable hex keybad (like elf II)
+-kb      Enable ascii keyboard
+-lm      Enable LED Module
+-m       Use extended ram pager (1mb), requires extended ports
+-nk      Set memory size to nk (example: -32k)
+-ref4    Reverse sense of EF4
+-rq      Inverse Q output
+-p       Enable printer output to printer.out
+-pcb     In v1870 mode, attach bit 7 to PCB color bit
+-pico    Emulate Pico/Elf V2.  Sets -rq, -ref2
+-r name  read specified program into memory
+-R name  Read specified program as rom
+-ram start-end  - Place ram a ram bank from start through end
+                  start and end must be hex (ex. -ram f000-f7ff)
+-sb      Add the SuperBoard to the Super Elf (*1)
+-sc num  Scale video output screens
+-slog    Log serial output to vt100.log
+-st2 name Read program file in .st2 format
+-studio2 Simulate a Studio II, this also sets -1861, -c 1.789, -a -4k
+-super   Simulate a Super Elf
+-t name  use file 'name' to hit keys during run mode
+-uc      Force uppercase when reading keyboard
+-v       Show program version
+-vt100   Enable vt100 terminal
+
+
+*1 This alters the behaviour of the M key.  This also invokes the following
+   options: -ram 9800-98ff -4k -R supermon.hex
+
+This program is a simulation of an early computer.  The computer in this
+simulation is similar in design to the Elf computer project published in
+popular electronics in 1976.  The base computer has 256 bytes of ram, 8
+toggle switches for input, 4 hex displays to show the current address and
+2 hex displays for data output.
+
+Front panel swithes (Standard Elf):
+  IN   - This button initiates a DMA IN operation of the processor.  The
+         values of the 8 data switches will be written into the memory
+         pointed to by R[0].
+  LOAD - This switch when up, and RUN down places the computer into load
+         mode.  In this mode, values can be set on the 8 data switches and
+         then loaded into memory by pressing the IN button.  After the 
+         transfer, the address displays will show the address just written
+         and the data displays will show the byte written.
+  MP   - This switch when up disables memory writes.  This would allow you
+         to step through memory in the LOAD mode without actually modifying
+         memory with each IN press, but would still increment the address.
+         using this you can step to an address in memory, turn MP off and
+         then write a new value into memory.
+  RUN  - This swithch when up and LOAD down places the cpu into run mode
+         the program will begin to execute from address 0.  When both RUN
+         and LOAD are down, the cpu is put into the reset state, setting the
+         current address back to 0, and disabling DMA and INT operations.
+  ON   - Turning this switch off will end the program.
+  DATA - These 8 switches are used to specify a byte to be input to memory.
+         During RUN mode, reading port 4 will also read the value of these
+         switches.
+  EF   - These 4 switches are connected to the 4 ef inputs of the cpu.
+
+Front panel switches (Super Elf):
+  L    - Places the computer into Load mode
+  R    - Places the cpu into the reset state
+  G    - Go, this starts the processor running
+  W    - Enter Wait mode.  This also removes memory protection in Load mode
+  M    - Enable 32byte mini monitor, this is in address 00-1f
+         When -sb is used, M will execute the monitor at 8000
+  S    - Single step the processor, will execute next instruction and then
+         enter Wait mode
+  P    - Enables memory Protection in Load mode
+  I    - Input, this is connected to DMA_IN in Load mode, or EF4 in run mode
+
+Note on the Vt-100 emulation:
+Currently the vt-100 emulation is very primative.  Most escape sequences have 
+not yet been implemented. the following escape sequences are currently
+implemented:
+    ^[nA
+    ^[nB
+    ^[nC
+    ^[nD
+    ^[n;nH
+    ^[n;nf
+    ^[J
+    ^[1J
+    ^[2J
+    ^[K
+    ^[1K
+    ^[2K
+    ^[s
+    ^[u
+The vt-100 emulation is based upon the serial model of the Elf II Giant Board.
+Serial output is on the Q line, serial input is on the EF4 line.  No uart exists,
+the timing must be generated in software.  See the source for IDIOT/4 to get an
+understanding of how this software uart works.
+
+
+Debugger:
+---------
+The debugger screen gives you an inside view of what is going on in the Elf
+emulator.  The F1 key enables/disables the debugger screen.  If a -d is
+included on the command line then the debugger window will be opened on
+startup.  The following commands are available in the debugger:
+
+?                       - Show help
+AS addr                 - Assemble
+CP src dest len         - Copy memory
+D1870                   - Display CDP1869/1870 registers
+DA [addr][,cnt]         - DisAssemble
+DB                      - Display breakpoints
+DM [addr][,cnt]         - Display Memory
+DP                      - Display current memory Pointer
+DS                      - Display storage map
+INT                     - Trigger an interrupt
+RB addr                 - Remove Breakpoint
+RN [addr]               - Run.  addr as optional start address
+ROM start end           - Specifin memory from start-end as ROM
+SB addr                 - Set breakpoint
+SM addr byte byte ...   - Set Memory to byte list
+SR reg value            - Set Register (P,X,D,DF,T,Q,R0-RF)
+ST [num]                - Step 1 or num instructions (num=dec)
+TR ON | OFF             - Turn tracing on or off
+TRAP asm_cmd            - Trap on specified command
+RT asm_cmd              - Remove specified command trap.
+TREG reg value          - Set a register trap
+RR reg value            - Remove a register trap
+DEM addr                - display EMS memory page
+
+The value of 'addr' can be:
+  P      - The value of R(P)
+  X      - The value of R(X)
+  Rn     - The value of R(n), example R1, RA, etc
+  hexnum - up to 4 digit hexadecimal number
+
+
+Devices:
+--------
+
+Pixie Graphics (-1861)
+  input port   1         Enable Graphics
+  output port  1         Disable Graphics
+  flag line    EF1       In Frame Indicator
+
+Keyboard (-k)
+  input port   7         Read Data
+  flag line    EF3       Data Ready
+
+PortExtender (-e)
+  output port  5         Port selector
+  output port  6         Write selected port
+  input port   6         Read selected port
+  
+Printer (-p)
+  output port  7         Write Data
+
+Led Module (-lm)
+  output port  4         Write Data
+
+Vt100 (-vt100)
+  serial out   Q         Serial Out
+  flag line    EF4       Serial In
+
+FDC (-fdc)
+  output port  2         Select fdc port
+  output port  3         Write selected port
+  input  port  3         Read selected port
+  flag line    2         FDC Data request line
+
+IDE (-ide)
+  output port  2         Select ide port
+  output port  3         Write selected port
+  input  port  3         Read selected port
+  
+The simulator now allows you to reassign device port assignments when the
+program is executed.  The following flags can now be used when specifying 
+device options:
+    In    - Redesignate an Input port to port 'n'
+    On    - Redesignate an Output port to port 'n'
+    En    - Redesignate an EF line to line 'n'
+These options are place right after the device switch. here are some examples:
+  -p=o2         - Enables printer on output port 2
+  -kb=i2,e2     - Enables keyboard on input port 2 and flag line 2
+  -e=o1,o7      - Enable extended ports, port select on port 1,write selected
+                  is port 7, read selected port would remain on 6
+
+
+Special Registers:
+------------------
+Register       Purpose
+R(0)           DMA in or out
+R(1)           Interrupt vector
+R(2)           X register during interrupt
+
+Registers:
+D   8-bits     Data Register
+DF  1-bit      Data Flag (Carry)
+R   16-bits    16 Scratchpad Registers
+P   4-bits     Specifies which R register is program counter
+X   4-bits     Specifies which R register is data pointer
+N   4-bits     Low order nybble of instruction
+T   8-bits     Holds X and P during interrupt. X is high nybble
+IE  1-bit      Interrupt Enable
+Q   1-bit      Output flip-flop
+
+
+Instruction Set:
+Opcode  Mnemonic  Instruction             Operation
+===========================================================================
+    0N       LDN  Load via N              M(R(N))->D; For N not 0
+    4N       LDA  Load Advance            M(R(N))->D; R(N)+1->R(N)
+    F0       LDX  Load via X              M(R(X))->D
+    72      LDXA  Load via X and advance  M(R(X))->D; R(X)+1->R(X)
+    F8       LDI  Load immediate          M(R(P))->D; R(P)+1->R(P)
+    5N       STR  Store via N             D->M(R(N))
+    73      STXD  Store Via X and dec.    D->M(R(X)); R(X)-1->R(X)
+    1N       INC  Increment reg N         R(N)+1->R(N)
+    2N       DEC  Decrement reg N         R(N)-1->R(N)
+    60       IRX  Increment reg X         R(X)+1->R(X)
+    8N       GLO  Get low reg N           R(N).0->D
+    AN       PLO  Put low reg N           D->R(N).0
+    9N       GHI  Get high reg N          R(N).1->D
+    BN       PHI  Put high reg N          D->R(N).1
+------------------------------------------------------------------------
+    F1        OR  Or                      M(R(X)) or D->D
+    F9       ORI  Or immediate            M(R(P)) or D->D; R(P)+1->R(P)
+    F3       XOR  Exclusive or            M(R(X)) xor D->D
+    FB       XRI  Exclusive or immediate  M(R(P)) xor D->D; R(P)+1->R(P)
+    F2       AND  And                     M(R(X)) and D->D
+    FA       ANI  And immediate           M(R(P)) and D->D; R(P)+1->R(P)
+    F6       SHR  Shift right             Shift D right; lsb(D)->DF;
+                                          0->msb(D)
+    76      SHRC  Shift right with carry  Shift D right; lsb(D)->DF;
+                                          DF->msb(D)
+    FE       SHL  Shift left              Shift D left; msb(D)->DF;
+                                          0->lsb(D)
+    7E      SHLC  Shift left with carry   Shift D left; msb(D)->DF;
+                                          DF->lsb(D)
+    F4       ADD  Add                     M(R(X))+D->DF,D
+    FC       ADI  Add immediate           M(R(P))+D->DF,D; R(P)+1->R(P)
+    74       ADC  Add with carry          M(R(X))+D+DF->DF,D
+    7C      ADCI  Add with carry imm.     M(R(P))+D+DF->DF,D; R(P)+1->R(P)
+    F5        SD  Subtract D              M(R(X))-D->DF,D
+    FD       SDI  Subtract D immediate    M(R(P))-D->DF,D; R(P)+1->R(P)
+    75       SDB  Sub. D with borrow      M(R(X))-D-DF->DF,D
+    7D      SDBI  Sub. D with borrow imm. M(R(P))-D-DF->DF,D; R(P)+1->R(P)
+    F7        SM  Subtract memory         D-M(R(X))->DF,D
+    FF       SMI  Subtract Mem. imm.      D-M(R(P))->DF,D; R(P)+1->R(P)
+    77       SMB  Sub. Mem. with borrow   D-M(R(X))-DF->DF,D;
+    7F      SMBI  Sub. Mem. w/borrow imm. D-M(R(P))-DF->DF,D; R(P)+1>R(P)
+------------------------------------------------------------------------
+    30        BR  Branch                  M(R(P))->R(P).0
+    38       NBR  No Branch               R(P)+1->R(P)
+    32        BZ  Branch if D=0           If D=0, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    3A       BNZ  Branch if D<>0          If D<>0, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    33       BDF  Branch if DF=1          if DF=1, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    3B       BNF  Branch if DF=0          if DF=0, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    31        BQ  Branch if Q=1           if Q=1, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    39       BNQ  Branch if Q=0           if Q=0, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    34        B1  Branch if EF1=1         if EF1=1, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    3C       BN1  Branch if EF1=0         if EF1=0, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    35        B2  Branch if EF2=1         if EF2=1, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    3D       BN2  Branch if EF2=0         if EF2=0, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    36        B3  Branch if EF3=1         if EF3=1, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    3E       BN3  Branch if EF3=0         if EF3=0, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    37        B4  Branch if EF4=1         if EF4=1, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+    3F       BN4  Branch if EF4=0         if EF4=0, M(R(P))->R(P).0
+                                          else R(P)+1->R(P)
+------------------------------------------------------------------------
+    C0       LBR  Long Branch             M(R(P))->R(P).1;
+                                          M(R(P)+1)->R(P).0
+    C8      NLBR  No long branch          R(P)+2->R(P)
+    C2       LBZ  Branch if D=0           if D=0 then M(R(P))->R(P).1;
+                                                      M(R(P)+1)->R(P).0
+                                          else R(P)+2->R(P)
+    CA      LBNZ  Branch if D<>0          if D<>0 then M(R(P))->R(P).1;
+                                                       M(R(P)+1)->R(P).0
+                                          else R(P)+2->R(P)
+    C3      LBDF  Branch if DF=1          if DF=1 then M(R(P))->R(P).1;
+                                                       M(R(P)+1)->R(P).0
+                                          else R(P)+2->R(P)
+    CB      LBNF  Branch if DF=0          if DF=0 then M(R(P))->R(P).1;
+                                                       M(R(P)+1)->R(P).0
+                                          else R(P)+2->R(P)
+    C1       LBQ  Branch if Q=1           if Q=1 then M(R(P))->R(P).1;
+                                                      M(R(P)+1)->R(P).0
+                                          else R(P)+2->R(P)
+    C9      LBNQ  Branch if Q=0           if Q=0 then M(R(P))->R(P).1;
+                                                      M(R(P)+1)->R(P).0
+                                          else R(P)+2->R(P)
+------------------------------------------------------------------------
+    CE       LSZ  Skip if D=0             if D=0, R(P)+2->R(P)
+                                          else Continue
+    C6      LSNZ  Skip if D<>0            if D<>0, R(P)+2->R(P)
+                                          else Continue
+    CF      LSDF  Skip if DF=1            if DF=1, R(P)+2->R(P)
+                                          else Continue
+    C7      LSNF  Skip if DF=0            if DF=0, R(P)+2->R(P)
+                                          else Continue
+    CD       LSQ  Skip if Q=1             if Q=1, R(P)+2->R(P)
+                                          else Continue
+    C5      LSNQ  Skip if Q=0             if Q=0, R(P)+2->R(P)
+                                          else Continue
+    CC      LSIE  Skip if IE=1            if IE=0, R(P)+2->R(P)
+                                          else Continue
+------------------------------------------------------------------------
+    00       IDL  Idle                    Wait for DMA or Interrupt
+                                          M(R(0))->Bus
+    C4       NOP  No operation            Continue
+    DN       SEP  Set P                   N->P
+    EN       SEX  Set X                   N->X
+    7B       SEQ  Set Q                   1->Q
+    7A       REQ  Reset Q                 0->Q
+    78       SAV  Save                    T->M(R(X))
+    79      MARK  Push X,P to stack       (X,P)->T; (X,P)->M(R(2)) then
+                                          P->X; R(2)-1->R(2)
+    70       RET  Return                  M(R(X))->(X,P); R(X)+1->R(X); 1->IE
+    71       DIS  Disable                 M(R(X))->(X,P); R(X)+1->R(X); 0->IE
+------------------------------------------------------------------------
+    61       OUT  Output 1                M(R(X))->Bus; R(X)+1->R(X); Nlines=1
+    62       OUT  Output 2                M(R(X))->Bus; R(X)+1->R(X); Nlines=2
+    63       OUT  Output 3                M(R(X))->Bus; R(X)+1->R(X); Nlines=3
+    64       OUT  Output 4                M(R(X))->Bus; R(X)+1->R(X); Nlines=4
+    65       OUT  Output 5                M(R(X))->Bus; R(X)+1->R(X); Nlines=5
+    66       OUT  Output 6                M(R(X))->Bus; R(X)+1->R(X); Nlines=6
+    67       OUT  Output 7                M(R(X))->Bus; R(X)+1->R(X); Nlines=7
+    69       INP  Input 1                 Bus->M(R(X)); Bus->D; Nlines=1
+    6A       INP  Input 2                 Bus->M(R(X)); Bus->D; Nlines=2
+    6B       INP  Input 3                 Bus->M(R(X)); Bus->D; Nlines=3
+    6C       INP  Input 4                 Bus->M(R(X)); Bus->D; Nlines=4
+    6D       INP  Input 5                 Bus->M(R(X)); Bus->D; Nlines=5
+    6E       INP  Input 6                 Bus->M(R(X)); Bus->D; Nlines=6
+    6F       INP  Input 7                 Bus->M(R(X)); Bus->D; Nlines=7
+------------------------------------------------------------------------
+
+1805 Mode Instruction Set:
+Opcode  Mnemonic  Instruction             Operation
+===========================================================================
+ 68 CN      RLDI  Register load immed.    M(R(P))->R(N).1; M(R(P)+1)->R(N).0
+                                          R(P)+2->R(P)
+ 68 6N      RLXA  Register load via X     M(R(X))->R(N).1; M(R(X)+1)->R(N).0
+                  and advance             R(X)+2->R(X)
+ 68 AN      RSXD  Register store via X    R(N).0->M(R(X)); R(N).1->M(R(X)-1)
+                  and decrement           R(X)-2->R(X)
+
+ 68 2N      DBNZ  Decrement reg N and     R(N)-1->R(N) if R(N) not 0,
+                  long branch if not 0    M(R(P))->R(P).1,M(R(P)+1)->R(P).0
+                                          else R(P)+2->R(P)
+ 68 BN      RNX   Register N to X copy    R(N)->R(X)
+------------------------------------------------------------------------
+ 68 F4      DADD  Decimal Add             M(R(X))+D->DF,D, decimal adjust
+ 68 FC      DADI  Decimal add immediate   M(R(P))+D->DF,D, decimal adjust
+                                          R(P)+1->R(P)
+ 68 74      DADC  Decimal add w/carry     M(R(X))+D+DF->DF,D; decimal adjust
+ 68 7C      DACI  Decimal add immediate   M(R(P))+D+DF->DF,D; decimal adjust
+                  with carry              R(P)+1->R(P)
+ 68 F7      DSM   Decimal sub memory      D-M(R(X))->DF,D; decimal adjust
+ 68 FF      DSMI  Decimal sub memory      D-M(R(P))->DF,D; decimal adjust
+                  immediate               R(P)+1->R(P)
+ 68 77      DSMB  Desimal sub memory      D-M(R(X))-(not DF)->DF,D
+                  with borrow             decimal adjust
+ 68 7F      DSBI  Desimal sub immediate   D-M(R(P))-(not DF)->DF,D
+                  with borrow             decimal adjust; R(P)+1->R(P)
+------------------------------------------------------------------------
+ 68 3E      BCI   Short branch on         if CI=1,M(R(P))->R(P).0; 0->CI
+                  counter interrupt       else R(P)+1->R(P)
+ 68 3F      BXI   Short branch on         if XI=1,M(R(P))->R(P).0; 0->CI
+                  external interrupt      else R(P)+1->R(P)
+------------------------------------------------------------------------
+ 68 06      LDC   Load counter            Cntr stopped:D->CH,CNTR;0->CI
+                                          Cntr running:d->CH
+ 68 08      GEC   Get counter             Cntr->D
+ 68 00      STPC  Stop counter            Stop Cntr; 0->/32 prescaler
+ 68 01      DTC   Decrement counter       Cntr-1->Cntr
+ 68 07      STM   Set timer mode and      TPA/32->CNTR
+                  start
+ 68 05      SCM1  Set counter mode 1 and  /EF1->Cntr clock
+                  start
+ 68 03      SCM2  Set counter mode 2 and  /EF2->Cntr clock
+                  start
+ 68 04      SPM1  Set pulse width mode 1  TPA.EF1->Cntr clock
+                  and start               /EF1 / stops count
+ 68 02      SPM2  Set pulse width mode 2  TPA.EF2->Cntr clock
+                  and start               /EF2 / stops count
+ 68 09      ETQ   Enable toggle Q         if Cntr=01; next cntr clock /
+                                          /Q->Q
+------------------------------------------------------------------------
+ 68 0A      XIE   External int. enable    1->XIE
+ 68 0B      XID   External int. disable   0->XIE
+ 68 0C      CIE   External int. enable    1->CIE
+ 68 0D      CID   External int. disable   0->CIE
+ 68 76      DSAV  Save T,D,DF             R(X)-1->R(X); T->M(R(X))
+                                          R(X)-1->R(X); D->M(R(X))
+                                          Shift D right with carry
+                                          R(X)-1->R(X); D->M(R(X))
+------------------------------------------------------------------------
+ 68 8N      SCAL  Standard call           R(N).0->M(R(X)); R(N).1->M(R(X)-1);
+                                          R(X)-2->R(X); R(P)->R(N);
+                                          M(R(N))->R(P).1
+                                          M(R(N)+1)->R(P).0;
+                                          RN(N)+2->R(N)
+ 68 9N      SRET  Standard return         R(N)->R(P)
+                                          M(R(X)+1)->R(N).1; M(R(X)+2)->R(N).0
+                                          R(X)+2->R(X)
+------------------------------------------------------------------------
+
+Ports as assigned by XElf
+    INP1    Activate pixie graphics (when loaded)
+    INP3    Read selected disk controller port
+    INP4    read data toggle switches
+    INP6    Read from selected extended port
+    INP7    read from ascii keyboard
+
+    OUT1    De-activate pixie graphics (when loaded)
+    OUT2    Write disk controller selection port
+    OUT3    Write to selected disk controller port
+    OUT4    write to data hex displays
+    OUT5    Write extended port select
+    OUT6    Write to selected extended port
+    OUT7    write to parallel port
+
+Extended Ports:
+    1-15    Memory pager cells
+    16      DMA selection
+
+DMA Selector
+  bits 0-2  select dma source
+  bit  7    select direction 0=read 1=write
+
+DMA Channels
+    0       Disk Controller
+
+Input Lines used by XElf
+    EF1     Pixie graphic frame indicator, 0=in frame, 1=out of frame
+    EF2
+    EF3     Ascii Keyboard data strobe (0=data ready)
+    EF4     Connected to IN button
+            Connected to serial-in when vt100 is enabled
+
+Output Lines used by XElf
+      Q     Connected to serial-out when vt100 is enabled
+
+Disk controller ports:
+----------------------
+      Read      Write
+  0 - Status    command
+  1 - Track     track
+  2 - Sector    Sector
+  3 - Data      Data
+  4 -           Drive Select
+
+Disk controller commands:
+-------------------------        Bits
+Type   Command          7  6  5  4  3  2  1  0
+  I    Restore          0  0  0  0  h  V r1 r0
+  I    Seek             0  0  0  1  h  V r1 r0
+  I    Step             0  0  1  u  h  V r1 r0
+  I    Step In          0  1  0  u  h  V r1 r0
+  I    Step Out         0  1  1  u  h  V r1 r0
+ II    Read Sector      1  0  0  m  0  E  0  0
+ II    Write Sector     1  0  1  m  0  E  0  a
+III    Read Address     1  1  0  0  0  E  0  0
+III    Read Track       1  1  1  0  0  E  0  0
+III    Write Track      1  1  1  1  0  E  0  0
+IV     Force Interrupt  1  1  0  1 i3 i2 i1 i0
+
+h = 0  - Do not load head at beginning of command
+h = 1  - Loas head at beginning of Command
+V = 1  - Verify head position
+V = 0  - Do not verify head position
+u = 0  - Do not update track register
+u = 1  - Update track register
+m = 0  - Single sector read
+m = 1  - Multi sector read
+E = 0  - No 15ms delay
+E = 1  - 15 ms delay
+a = 0  - FB data mark
+a = 1  - F8 Deleted data mark
+r1 r0  = 0 0  - 6 ms step rate
+       = 0 1  - 12 ms step rate
+       = 1 0  - 20 ms step rate
+       = 1 1  - 30 ms step rate
+Note: Currently only type I and II commands are supported.  Multi-sector
+      read/writes are also not yet supported.
+
+Status:
+-------
++---+-------------+-----------+-----------+-----------+-----------+------------+
+|Bit| Type I      | Read Addr | Read Sec. | Write Sec | Read Track| Write trk  |
++---+-------------+-----------+-----------+-----------+-----------+------------+
+| 0 | busy        | busy      | busy      | busy      | busy      | busy       |
+| 1 | index       | drq       | drq       | drq       | drq       | drq        |
+| 2 | track 0     | lost data | lost data | lost data | lost data | lost data  |
+| 3 | CRC error   | CRC error | CRC error | CRC error | 0         | 0          |
+| 4 | Seek error  | rnf       | rnf       | rnf       | 0         | 0          |
+| 5 | Head loaded | 0         | rec type  | write flt | 0         | write fault|
+| 6 | Write prot  | 0         | 0         | write prot| 0         | write prot |
+| 7 | Not ready   | Not ready | Not ready | Not ready | Not ready | Not ready  |
++---+-------------+-----------+-----------+-----------+-----------+------------+

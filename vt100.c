@@ -18,6 +18,7 @@
 #include "elf.h"
 #include <fcntl.h>
 #include <string.h>
+#include <unistd.h>
 
 /* rcs_GC       gc; */
 rcs_Event    event;
@@ -35,6 +36,11 @@ int  keyStart;
 int  keyEnd;
 byte vt100EF;
 byte vtEnabled;
+char xmodemMode;
+byte xmodemBuffer[256];
+int  xmodemCount;
+int  xmodemFile;
+int  xmodemBlock;
 #ifdef WIN32
 rcs_Pixmap   vt100Buffer2;
 #endif
@@ -58,7 +64,7 @@ void configureVt100(char* arg) {
   useVt100 = 'Y';
   vtCount = -1;
   vtOutCount = -1;
-  vtOut = 0;
+  vtOut = -1;
   vt100EF = 1;
   }
 
@@ -74,6 +80,8 @@ int vt100Parity(int value) {
   }
 
 void vt100Cycle() {
+  int i;
+  byte checksum;
   if (vtOutCount > 0) {
     vtOutCount--;
     if (vtOutCount <= 0) {
@@ -82,11 +90,17 @@ void vt100Cycle() {
       vtOutCount = baud;
       if (vtOutBits < 2) vt100EF = 1;
       if (--vtOutBits == 0) {
-        vtOut = 0;
+        vtOut = -1;
         vtOutCount = -1;
+        if (xmodemMode == 'S' && xmodemCount < 132) {
+          vtOut = xmodemBuffer[xmodemCount++];
+          }
         }
       }
-    } else if (vtOut != 0 && vtEnabled) {
+    } else if (vtOut >= 0 && vtEnabled) {
+if (xmodemMode == 'R') printf("-->%02x\n",vtOut);
+if (xmodemMode == 'S') printf("<%02x>",vtOut);
+if (vtOut == 0x06) printf("<ACK>\n");
     vt100EF = 0;
     vtOutCount = baud;
     vtOutBits = 10;
@@ -107,7 +121,59 @@ void vt100Cycle() {
       vtCount = baud;
       if (--vtBits == 0) {
         vtCount = -1;
-        vt100Display(rs232 & 0x7f);
+if (xmodemMode == ' ') {
+//if (rs232 != 10 && rs232 != 13 && rs232 != 0x1b && (rs232 < 32 || rs232 > 0x7e)) printf("[%02x]\n",rs232);
+  }
+if (xmodemMode == 'R') printf("<%02x>",rs232);
+if (xmodemMode == 'S') printf("\n[%02x]\n",rs232);
+        if (xmodemMode == 'R') {
+          if (xmodemCount == 0 && (rs232 & 0xff) == 0x04) {
+printf("\nEOT received\n");
+            xmodemMode = ' ';
+            close(xmodemFile);
+            vtOut = 0x06;
+            }
+          else {
+            xmodemBuffer[xmodemCount++] = rs232 & 0xff;
+            if (xmodemCount == 132) {
+              checksum = 0;
+              for (i=0; i<131; i++) checksum += xmodemBuffer[i];
+printf("\nBlock %d received %02x == %02x\n",xmodemBuffer[1],xmodemBuffer[131],checksum);
+              write(xmodemFile, xmodemBuffer+3, 128);
+              xmodemCount = 0;
+              vtOut = 0x06;
+              }
+            }
+          }
+        else if (xmodemMode == 'S') {
+          if (rs232 == 0x06 || rs232 == 0x15) {
+            i = read(xmodemFile, xmodemBuffer+3, 128);
+            if (i != 128) {
+printf("<04>\n");
+              vtOut = 0x04;
+              close(xmodemFile);
+              xmodemMode = ' ';
+              }
+            else {
+              xmodemBuffer[0] = 0x01;
+              xmodemBuffer[1] = xmodemBlock;
+              xmodemBuffer[2] = (255 - xmodemBlock) & 0xff;
+              checksum = 0;
+              for (i=0; i<131; i++) checksum += xmodemBuffer[i];
+              xmodemBuffer[131] = checksum;
+              xmodemCount = 1;
+              vtOut = 0x01;
+              xmodemBlock = (xmodemBlock + 1) & 0xff;
+              }
+            }
+          if (rs232 == 0x18) {
+printf("CAN received\n");
+            xmodemMode = ' ';
+            }
+          }
+        else {
+          vt100Display(rs232 & 0x7f);
+          }
         }
       }
     }
@@ -407,10 +473,21 @@ void vt100Event(rcs_Event event) {
         event.d1 = 0;
         }
       else if (event.d1 == KEY_F1) {
-printf("F1 pressed\n");
+printf("F1 pressed - Receive mode\n");
+        xmodemMode = 'R';
+        xmodemCount = 0;
+        vtOut = 0x15;
+        xmodemFile = open("xmodem.dat",O_WRONLY | O_TRUNC | O_CREAT,0666);
         }
       else if (event.d1 == KEY_F2) {
-printf("F2 pressed\n");
+printf("F2 pressed - Send mode\n");
+        xmodemMode = 'S';
+        xmodemCount = 128;
+        xmodemBlock = 1;
+        xmodemFile = open("xmodem.dat",O_RDONLY);
+        }
+      else if (event.d1 == KEY_F3) {
+        xmodemMode = ' ';
         }
       else if (event.d1 == KEY_BACK_SP) event.d1 = 8;
       else if (event.d1 == KEY_TAB) event.d1 = 9;
@@ -440,7 +517,7 @@ printf("F2 pressed\n");
 
 int vt100GetKey() {
   int ret;
-  if (keyStart == keyEnd) return 0;
+  if (keyStart == keyEnd) return -1;
   ret = keyBuffer[keyStart++];
   if (keyStart == 16) keyStart = 0;
   return ret;
@@ -464,6 +541,7 @@ void vt100Init() {
   savePos = 0;
   keyStart = 0;
   keyEnd = 0;
+  xmodemMode = ' ';
   vt100Window = rcs_createWindow(display,rcs_rootWindow(display),10,10,640,400);
   rcs_setWindowName(display,vt100Window,"Vt-100");
   rcs_showWindow(display,vt100Window);

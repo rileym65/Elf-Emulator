@@ -194,6 +194,8 @@ void showAddr(word adr) {
 
 void writeMem(word addr,byte value) {
   unsigned int extAddr;
+  if (addr >= 0x8000) memSwitch = 0x0000;
+  addr = addr ^ memSwitch;
 if (memTrap == 1 && addr >= 0x203d && addr <= 0x3060) {
   if (addr != 0x276b && addr != 0x276c) {
   steps = 0;
@@ -235,6 +237,8 @@ if (memTrap == 1 && addr >= 0x203d && addr <= 0x3060) {
 
 byte readMem(word addr) {
   unsigned int extAddr;
+  if (addr >= 0x8000) memSwitch = 0x0000;
+  addr = addr ^ memSwitch;
   showAddr(addr);
   cpu.address = addr;
   if (use1870 == 'Y') {
@@ -582,7 +586,7 @@ if (cidelsa == 'Y') {
     fclose(config);
     }
 
-    if (useVt100 == 'Y' && vtOut <= 0) {
+    if (useVt100 == 'Y' && vtOut < 0) {
       vtOut = vt100GetKey();
       }
    
@@ -992,6 +996,8 @@ memTrap = 0;
   useZoom = 'N';
   useEMS = 'N';
   v1870Pcb = 'N';
+  memSwitch = 0x0000;
+  picoelf = 0;
   emsPage = 0;
   strcpy(diskName,"disk1.ide");
   ram = (byte*)malloc(65536);
@@ -1002,7 +1008,7 @@ memTrap = 0;
     if (strncmp(argv[i],"-ps2",4) == 0) configurePs2Keyboard(argv[i]);
     if (strcmp(argv[i],"-a") == 0) showAddress = 'N';
     if (strcmp(argv[i],"-cid") == 0) cidelsa = 'Y';
-    if (strcmp(argv[i],"-v") == 0) printf("RC/Elf v2.6\n");
+    if (strcmp(argv[i],"-v") == 0) printf("RC/Elf v2.7\n");
     if (strcmp(argv[i],"-d") == 0) { debugMode='Y'; steps = 0; }
     if (strncmp(argv[i],"-e",2) == 0) configurePortExt(argv[i]);
     if (strcmp(argv[i],"-m") == 0) usePager = 'Y';
@@ -1021,6 +1027,12 @@ memTrap = 0;
     if (strcmp(argv[i],"-slog") == 0) serialLog = 'Y';
     if (strcmp(argv[i],"-dlog") == 0) debugLog = 'Y';
     if (strcmp(argv[i],"-ems") == 0) useEMS = 'Y';
+    if (strcmp(argv[i],"-pico") == 0) {
+      ef2Sense = 0;
+      revQ = 1;
+      memSwitch = 0x8000; 
+      picoelf = 1;
+      }
     if (strncmp(argv[i],"-disk=",6) ==0) {
       strcpy(diskName,argv[i]+6);
       ide.drive[0] = diskName;

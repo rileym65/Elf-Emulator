@@ -8,7 +8,7 @@
  *******************************************************************
 */
 
-#include <librcs.h>
+#include "librcs.h"
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef WIN32

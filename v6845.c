@@ -14,7 +14,7 @@
 #define _CHARSET
 #endif
 
-#include <librcs.h>
+#include "librcs.h"
 #include "elf.h"
 
 void v6845Write(word addr,byte value) {

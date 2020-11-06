@@ -1,4 +1,4 @@
-#include <librcs.h>
+#include "librcs.h"
 #include <time.h>
 
 #undef LINK
@@ -311,7 +311,7 @@ LINK int          vtBits;
 LINK byte         rs232;
 LINK int          vtOutBits;
 LINK long         vtOutCount;
-LINK byte         vtOut;
+LINK int          vtOut;
 LINK byte         parPort;
 LINK FDC          fdc;
 LINK char         fdcMode;
@@ -413,6 +413,8 @@ LINK byte      cid2;
 LINK byte      cid4;
 LINK byte      cidEF2;
 LINK int       vScale;
+LINK int       memSwitch;
+LINK byte      picoelf;
 
 extern byte readMem(word addr);
 

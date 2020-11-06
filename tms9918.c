@@ -8,7 +8,7 @@
  *******************************************************************
 */
 
-#include <librcs.h>
+#include "librcs.h"
 #include "elf.h"
 
 rcs_Window  tms9918w;

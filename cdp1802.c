@@ -8,7 +8,7 @@
  *******************************************************************
 */
 
-#include <librcs.h>
+#include "librcs.h"
 #include <string.h>
 #include <stdlib.h>
 #include "elf.h"
@@ -35,6 +35,7 @@ void cdp1802SetMode(CDP1802* cpu) {
   if (cpu->clear == 1 && cpu->wait==1) cpu->mode='R';
   if (cpu->clear == 0 && cpu->wait==0) cpu->mode='L';
   if (cpu->clear == 1 && cpu->wait==0) cpu->mode='P';
+  if (cpu->mode != 'R' && picoelf != 0) memSwitch = 0x8000;
   }
 
 void cdp1802SetClear(CDP1802* cpu,int value) {
@@ -138,6 +139,7 @@ void cdp1802Reset(CDP1802* cpu) {
   cpu->ctrPre = 0;
   cpu->tq = 0;
   cpu->ctrRunning = 0;
+  if (picoelf) memSwitch = 0x8000;
 /*
   for (i=1; i<16; i++) cpu->r[i] = 0;
 */
