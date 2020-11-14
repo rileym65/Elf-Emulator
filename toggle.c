@@ -8,7 +8,7 @@
  *******************************************************************
 */
 
-#include <librcs.h>
+#include "librcs.h"
 #include "elf.h"
 #include "images/swup.xpm"
 #include "images/swdn.xpm"
