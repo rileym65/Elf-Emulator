@@ -41,6 +41,8 @@ elf: $(OBJS)
 .c.o:
 	$(CC) $(CFLAGS) $(INCPATH) $(INCS) $(DEFS) -c $<
 
+install: elf
+	cp elf ..
 dist:
 	make clean
 	-rmdir elf

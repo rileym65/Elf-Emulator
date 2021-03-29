@@ -850,10 +850,13 @@ int figureRam(char* buffer) {
 
 void configureBaud(char* buffer) {
   buffer+=6;
+  if (strcmp(buffer,"9600") == 0) baud = 26;
+  if (strcmp(buffer,"4800") == 0) baud = 52;
   if (strcmp(buffer,"2400") == 0) baud = 104;
   if (strcmp(buffer,"1200") == 0) baud = 208;
   if (strcmp(buffer,"600") == 0) baud = 416;
   if (strcmp(buffer,"300") == 0) baud = 832;
+printf("baud=%d\n",baud);
   }
 
 void read_st2(char *fname) {

@@ -21,7 +21,7 @@
 #define VCYCLE 50
 
 char         keyboardValue;
-byte         keyboardEF;
+static byte         keyboardEF;
 int          keyCycles;
 byte         lastCode;
 byte         qmode;

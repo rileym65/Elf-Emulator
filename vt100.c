@@ -428,7 +428,7 @@ void vt100Display(int byt) {
       vidRam[curLine][curPos] = 32;
       }
     if (byt == 9) {
-      curPos = (curPos & 0xf8) + 8;
+      curPos = (curPos + 8) & 0xf8;
       if (curPos >= 80) {
         curPos = 0;
         if (++curLine == 25) {
