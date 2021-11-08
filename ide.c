@@ -330,8 +330,10 @@ word ide_readReg(IDE* ide,int reg) {
     case 0x06:ret = ide->rHeadDev;                         /* head/device */
               break;
     case 0x07:ret = ide->rStatus;                          /* status */
+              if (ide->rStatus & 0x80) ide->rStatus &= 0x7f;
               break;
     case 0x0e:ret = ide->rStatus;                          /* status */
+              if (ide->rStatus & 0x80) ide->rStatus &= 0x7f;
               break;
     case 0x0f:ret = ide->rAStatus;                         /* active status */
               break;
