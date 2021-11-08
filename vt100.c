@@ -148,13 +148,14 @@ printf("\nBlock %d received %02x == %02x\n",xmodemBuffer[1],xmodemBuffer[131],ch
         else if (xmodemMode == 'S') {
           if (rs232 == 0x06 || rs232 == 0x15) {
             i = read(xmodemFile, xmodemBuffer+3, 128);
-            if (i != 128) {
+            if (i <= 0) {
 printf("<04>\n");
               vtOut = 0x04;
               close(xmodemFile);
               xmodemMode = ' ';
               }
             else {
+              while (i<128) { xmodemBuffer[i+3]=0x1a; i++; }
               xmodemBuffer[0] = 0x01;
               xmodemBuffer[1] = xmodemBlock;
               xmodemBuffer[2] = (255 - xmodemBlock) & 0xff;
