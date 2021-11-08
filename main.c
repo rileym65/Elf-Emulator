@@ -300,7 +300,6 @@ void init() {
   else if (computer == '1') machine = newHbElf();
   else if (computer == 'T') machine = newStudio2();
   else if (computer == 'X') machine = newComx35();
-  cpu=cdp1802New();
   cpu.readMem=readMem;
   cpu.writeMem=writeMem;
   cpu.readPort=readPort;
@@ -1005,6 +1004,7 @@ memTrap = 0;
   strcpy(diskName,"disk1.ide");
   ram = (byte*)malloc(65536);
   for (i=0; i<32768; i++) ram[i] = 0;
+  cpu=cdp1802New();
   i = 1;
   while (i<argc) {
     if (strncmp(argv[i],"-kb",3) == 0) configureKeyboard(argv[i]);
@@ -1194,13 +1194,13 @@ memTrap = 0;
 
   rcs_copyArea(display,screen,window,gc,0,0,wx,wy,0,0);
 
+
   red=rcs_openGC(display,window);
   black=rcs_openGC(display,window);
   white=rcs_openGC(display,window);
   rcs_namedForeground(display,black,"black");
   rcs_namedForeground(display,red,"red");
   rcs_namedForeground(display,white,"white");
-  init();
   debugWindow=rcs_createWindow(display,rcs_rootWindow(display),10,10,640,480);
   rcs_setWindowName(display,debugWindow,"Elf Debugger");
   debugBuffer=rcs_createPixmap(display,debugWindow,640,480);
@@ -1296,6 +1296,7 @@ memTrap = 0;
     rcs_drawFilledBox(display,pixieBuffer,black,0,0,256*vScale,256*vScale);
     rcs_copyArea(display,pixieBuffer,pixieWindow,gc,0,0,256*vScale,256*vScale,0,0);
     }
+  init();
   if (useTMS9918 =='Y') {
     vdp = tms9918_init();
     }
