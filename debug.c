@@ -718,6 +718,85 @@ void disassemble(word start,word count) {
                  case 0x6:
                  case 0x7:sprintf(buffer2,"OUT  %X",n);
                           break;
+                 case 0x8:
+                          i = ram[start];
+                          sprintf(buffer3,"%02x ",i);
+                          strcat(buffer,buffer3);
+                          n = i & 0xf;
+                          i >>= 4;
+                          start++;
+                          if (i == 0x00 && n == 0x00) strcpy(buffer2,"STPC");
+                          if (i == 0x00 && n == 0x01) strcpy(buffer2,"DTC");
+                          if (i == 0x00 && n == 0x02) strcpy(buffer2,"SPM2");
+                          if (i == 0x00 && n == 0x03) strcpy(buffer2,"SCM2");
+                          if (i == 0x00 && n == 0x04) strcpy(buffer2,"SPM1");
+                          if (i == 0x00 && n == 0x05) strcpy(buffer2,"SCM1");
+                          if (i == 0x00 && n == 0x06) strcpy(buffer2,"LDC");
+                          if (i == 0x00 && n == 0x07) strcpy(buffer2,"STM");
+                          if (i == 0x00 && n == 0x08) strcpy(buffer2,"GEC");
+                          if (i == 0x00 && n == 0x09) strcpy(buffer2,"ETQ");
+                          if (i == 0x00 && n == 0x0a) strcpy(buffer2,"XIE");
+                          if (i == 0x00 && n == 0x0b) strcpy(buffer2,"XID");
+                          if (i == 0x00 && n == 0x0c) strcpy(buffer2,"CIE");
+                          if (i == 0x00 && n == 0x0d) strcpy(buffer2,"CID");
+                          if (i == 0x07 && n == 0x04) strcpy(buffer2,"DADC");
+                          if (i == 0x07 && n == 0x06) strcpy(buffer2,"DSAV");
+                          if (i == 0x07 && n == 0x07) strcpy(buffer2,"DSMB");
+                          if (i == 0x0f && n == 0x04) strcpy(buffer2,"DADD");
+                          if (i == 0x0f && n == 0x07) strcpy(buffer2,"DSM");
+                          if (i == 0x03 && n == 0x0e) {
+                            sprintf(buffer2,"BCI  %02x",ram[start]);
+                            sprintf(buffer3,"%02x ",ram[start++]);
+                            strcat(buffer,buffer3);
+                            }
+                          if (i == 0x03 && n == 0x0f) {
+                            sprintf(buffer2,"BXI  %02x",ram[start]);
+                            sprintf(buffer3,"%02x ",ram[start++]);
+                            strcat(buffer,buffer3);
+                            }
+                          if (i == 0x07 && n == 0x0c) {
+                            sprintf(buffer2,"DACI %02x",ram[start]);
+                            sprintf(buffer3,"%02x ",ram[start++]);
+                            strcat(buffer,buffer3);
+                            }
+                          if (i == 0x07 && n == 0x0f) {
+                            sprintf(buffer2,"DSBI %02x",ram[start]);
+                            sprintf(buffer3,"%02x ",ram[start++]);
+                            strcat(buffer,buffer3);
+                            }
+                          if (i == 0x0f && n == 0x0c) {
+                            sprintf(buffer2,"DADI %02x",ram[start]);
+                            sprintf(buffer3,"%02x ",ram[start++]);
+                            strcat(buffer,buffer3);
+                            }
+                          if (i == 0x0f && n == 0x0f) {
+                            sprintf(buffer2,"DSMI %02x",ram[start]);
+                            sprintf(buffer3,"%02x ",ram[start++]);
+                            strcat(buffer,buffer3);
+                            }
+                          if (i == 0x02) {
+                            sprintf(buffer2,"DBNZ R%d,%04x",n,ram[start]<<8|ram[start+1]);
+                            sprintf(buffer3,"%02x %02x ",ram[start],ram[start+1]);
+                            strcat(buffer,buffer3);
+                            start+=2;
+                            }
+                          if (i == 0x06) sprintf(buffer2,"RLXA R%d",n);
+                          if (i == 0x08) {
+                            sprintf(buffer2,"SCAL R%d,%04x",n,ram[start]<<8|ram[start+1]);
+                            sprintf(buffer3,"%02x %02x ",ram[start],ram[start+1]);
+                            strcat(buffer,buffer3);
+                            start+=2;
+                            }
+                          if (i == 0x09) sprintf(buffer2,"SRET R%d",n);
+                          if (i == 0x0a) sprintf(buffer2,"RSXD R%d",n);
+                          if (i == 0x0b) sprintf(buffer2,"RNX  R%d",n);
+                          if (i == 0x0c) {
+                            sprintf(buffer2,"RLDI R%d,%04x",n,ram[start]<<8|ram[start+1]);
+                            sprintf(buffer3,"%02x %02x ",ram[start],ram[start+1]);
+                            strcat(buffer,buffer3);
+                            start+=2;
+                            }
+                          break;
                  case 0x9:
                  case 0xa:
                  case 0xb:
