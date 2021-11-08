@@ -26,6 +26,7 @@ CDP1802 cdp1802New() {
   ret.d=0;
   ret.df=0;
   ret.t=0;
+  ret.cpuMode = '2';
   cdp1802Reset(&ret);
   return ret;
   }
@@ -60,13 +61,14 @@ void cdp1802DmaIn(CDP1802* cpu,byte value) {
   }
 
 void decCounter(CDP1802* cpu) {
-  if (--cpu->counter == 0) {
+  if (--cpu->counter == 1) {
     if (cpu->tq) {
       cpu->q = (cpu->q) ? 0 : 1;
       }
     cpu->ci = (cpu->cie) ? 1 : 0;
-    cpu->counter = cpu->ch;
     }
+  if (cpu->counter == 0)
+    cpu->counter = cpu->ch;
   }
 void cdp1802SetEF(CDP1802* cpu,int flag,int value) {
 /*
@@ -76,13 +78,13 @@ void cdp1802SetEF(CDP1802* cpu,int flag,int value) {
     }
 */
   if (flag == 1) {
-    if (cpu->ctrMode == 2 && cpu->ctrRunning) {
+    if (cpu->ctrMode == 1 && cpu->ctrRunning) {
       if (value == 0 && (cpu->ef & 1)) decCounter(cpu);
       }
     if (value) cpu->ef |= 1; else cpu->ef &= 0xe;
     }
   if (flag == 2) {
-    if (cpu->ctrMode == 3 && cpu->ctrRunning) {
+    if (cpu->ctrMode == 2 && cpu->ctrRunning) {
       if (value == 0 && (cpu->ef & 2)) decCounter(cpu);
       }
     if (value) cpu->ef |= 2; else cpu->ef &= 0xd;
@@ -147,7 +149,7 @@ void cdp1802Reset(CDP1802* cpu) {
   cpu->address=0;
   }
 
-void inst1805(CDP1802* cpu) {
+void inst1805(CDP1802* cpu,char* tr) {
   char buffer[80];
   byte i,h,l;
   int  a,b;
@@ -162,97 +164,97 @@ void inst1805(CDP1802* cpu) {
               case 0:cpu->ctrRunning = 0;
                      cpu->ctrPre = 0;
                      cpu->ctrMode = 0;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," STPC");
-                        cpu->debug(buffer);
-                        }
-                      break;
+                     if (trace == 'Y') {
+                       sprintf(buffer," STPC ");
+                       strcat(tr,buffer);
+                       }
+                     break;
               case 1:decCounter(cpu);
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," DTC");
-                        cpu->debug(buffer);
-                        }
-                      break;
+                     if (trace == 'Y') {
+                       sprintf(buffer," DTC");
+                       strcat(tr,buffer);
+                       }
+                     break;
               case 2:cpu->ctrMode = 5;
                      cpu->ctrRunning=1;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," SPM2");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," SPM2");
+                       strcat(tr,buffer);
+                       }
                       break;
-              case 3:cpu->ctrMode = 3;
+              case 3:cpu->ctrMode = 2;
                      cpu->ctrRunning=1;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," SCM2");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," SCM2");
+                       strcat(tr,buffer);
+                       }
                       break;
               case 4:cpu->ctrMode = 4;
                      cpu->ctrRunning=1;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," SPM1");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," SPM1");
+                       strcat(tr,buffer);
+                       }
                       break;
-              case 5:cpu->ctrMode = 2;
+              case 5:cpu->ctrMode = 1;
                      cpu->ctrRunning=1;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," SCM1");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," SCM1");
+                       strcat(tr,buffer);
+                       }
                       break;
               case 6:cpu->ch = cpu->d;
                      if (!cpu->ctrRunning) {
                        cpu->counter = cpu->d;
                        cpu->ci = 0;
                        }
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," LDC");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," LDC");
+                       strcat(tr,buffer);
+                       }
                       break;
-              case 7:cpu->ctrMode = 1;
+              case 7:cpu->ctrMode = 3;
                      cpu->ctrRunning = 1;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," STM");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," STM");
+                       strcat(tr,buffer);
+                       }
                       break;
               case 8:cpu->d = cpu->counter;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," GEC");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," GEC");
+                       strcat(tr,buffer);
+                       }
                       break;
               case 9:cpu->tq = 1;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," ETQ");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," ETQ");
+                       strcat(tr,buffer);
+                       }
                       break;
               case 10:cpu->xie = 1;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," XIE");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," XIE");
+                       strcat(tr,buffer);
+                       }
                       break;
               case 11:cpu->xie = 0;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," XID");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," XID");
+                       strcat(tr,buffer);
+                       }
                       break;
               case 12:cpu->cie = 1;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," CIE");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," CIE");
+                       strcat(tr,buffer);
+                       }
                       break;
               case 13:cpu->cie = 0;
-                      if (cpu->debug != NULL) {
-                        sprintf(buffer," CID");
-                        cpu->debug(buffer);
-                        }
+                     if (trace == 'Y') {
+                       sprintf(buffer," CID");
+                       strcat(tr,buffer);
+                       }
                       break;
               }
             break;
@@ -262,9 +264,9 @@ void inst1805(CDP1802* cpu) {
            w=(h<<8)|l;
            if (--cpu->r[cpu->n] != 0) cpu->r[cpu->p] = w;
              else cpu->r[cpu->p]+=2;
-           if (cpu->debug != NULL) {
-             sprintf(buffer," DBNZ %02x%02x ",h,l);
-             cpu->debug(buffer);
+           if (trace == 'Y') {
+             sprintf(buffer," DBNZ %02x%02x",h,l);
+             strcat(tr,buffer);
              }
            break;
     case 3: switch (cpu->n) {
@@ -272,18 +274,18 @@ void inst1805(CDP1802* cpu) {
                        i=cpu->readMem(cpu->r[cpu->p]);
                        cpu->r[cpu->p]=(cpu->r[cpu->p]&0xff00) | i;
                        } else cpu->r[cpu->p]++;
-                     if (cpu->debug != NULL) {
-                       sprintf(buffer," BCI %02x ",i);
-                       cpu->debug(buffer);
+                     if (trace == 'Y') {
+                       sprintf(buffer," BCI %02x",i);
+                       strcat(tr,buffer);
                        }
                      break;
               case 15:if (cpu->xi) {
                        i=cpu->readMem(cpu->r[cpu->p]);
                        cpu->r[cpu->p]=(cpu->r[cpu->p]&0xff00) | i;
                        } else cpu->r[cpu->p]++;
-                     if (cpu->debug != NULL) {
-                       sprintf(buffer," BXI %02x ",i);
-                       cpu->debug(buffer);
+                     if (trace == 'Y') {
+                       sprintf(buffer," BXI %02x",i);
+                       strcat(tr,buffer);
                        }
                      break;
               }
@@ -291,11 +293,10 @@ void inst1805(CDP1802* cpu) {
     case 6: w = cpu->readMem(cpu->r[cpu->x]++) << 8;
              w |= cpu->readMem(cpu->r[cpu->x]++);
              cpu->r[cpu->n] = w;
-            if (cpu->debug != NULL) {
-              sprintf(buffer," RLXA %x ",cpu->n);
-              cpu->debug(buffer);
+            if (trace == 'Y') {
+              sprintf(buffer," RLXA %x",cpu->n);
+              strcat(tr,buffer);
               }
-             break;
     case 7: switch (cpu->n) {
               case 4:w = cpu->readMem(cpu->r[cpu->x]);
                      a = (((w >> 4) > 9) ? 9 : w >> 4) *10;
@@ -373,41 +374,41 @@ void inst1805(CDP1802* cpu) {
             w = cpu->readMem(cpu->r[cpu->n]++) << 8;
             w |= cpu->readMem(cpu->r[cpu->n]++);
             cpu->r[cpu->p] = w;
-            if (cpu->debug != NULL) {
-              sprintf(buffer," SCAL %x ",cpu->n);
-              cpu->debug(buffer);
+            if (trace == 'Y') {
+              sprintf(buffer," SCAL %x,%04x",cpu->n,w);
+              strcat(tr,buffer);
               }
              break;
     case 9: cpu->r[cpu->p] = cpu->r[cpu->n];
             w = cpu->readMem(++cpu->r[cpu->x]) << 8;
             w |= cpu->readMem(++cpu->r[cpu->x]);
-            if (cpu->debug != NULL) {
-              sprintf(buffer," SRET %x ",cpu->n);
-              cpu->debug(buffer);
+            if (trace == 'Y') {
+              sprintf(buffer," SRET %x",cpu->n);
+              strcat(tr,buffer);
               }
              break;
     case 10: cpu->writeMem(cpu->r[cpu->x]++,(byte)(cpu->r[cpu->n] >> 8));
              cpu->writeMem(cpu->r[cpu->x]++,(byte)(cpu->r[cpu->n] & 0xff));
              w |= cpu->readMem(cpu->r[cpu->x]++);
              cpu->r[cpu->n] = w;
-            if (cpu->debug != NULL) {
-              sprintf(buffer," RSXD %x ",cpu->n);
-              cpu->debug(buffer);
+            if (trace == 'Y') {
+              sprintf(buffer," RSXD %x",cpu->n);
+              strcat(tr,buffer);
               }
              break;
     case 11: cpu->r[cpu->x] = cpu->r[cpu->n];
-            if (cpu->debug != NULL) {
-              sprintf(buffer," RNX %x ",cpu->n);
-              cpu->debug(buffer);
+            if (trace == 'Y') {
+              sprintf(buffer," RNX  %x",cpu->n);
+              strcat(tr,buffer);
               }
              break;
     case 12: w = cpu->readMem(cpu->r[cpu->p]++) << 8;
              w |= cpu->readMem(cpu->r[cpu->p]++);
              cpu->r[cpu->n] = w;
-            if (cpu->debug != NULL) {
-              sprintf(buffer," RLDI %x ",cpu->n);
-              cpu->debug(buffer);
-              }
+             if (trace == 'Y') {
+               sprintf(buffer," RLDI %x",cpu->n);
+               strcat(tr,buffer);
+               }
              break;
     case 15: switch (cpu->n) {
               case 4:w = cpu->readMem(cpu->r[cpu->x]);
@@ -481,6 +482,23 @@ void cdp1802Cycle(CDP1802* cpu) {
   char buffer[80];
   if (cpu->mode != 'R') return;
   if (cpu->readMem == NULL) return;
+  if (cpu->cpuMode == '5' && cpu->ctrRunning) {
+    if (cpu->ctrMode == 3) {
+      cpu->ctrPre += 2;
+      if (cpu->ctrPre >= 32) {
+        cpu->ctrPre -= 32;
+        decCounter(cpu);
+        }
+      }
+    if (cpu->ctrMode == 4) {
+      if ((cpu->ef & 1) == 0) decCounter(cpu);
+      if ((cpu->ef & 1) == 0) decCounter(cpu);
+      }
+    if (cpu->ctrMode == 5) {
+      if ((cpu->ef & 2) == 0) decCounter(cpu);
+      if ((cpu->ef & 2) == 0) decCounter(cpu);
+      }
+    }
   if (cpu->idle) return;
   if (trace == 'Y') {
     sprintf(tr,"%04X: ",cpu->r[cpu->p]);
@@ -693,7 +711,7 @@ void cdp1802Cycle(CDP1802* cpu) {
               break;
               }
             if (cpu->n == 8 && cpu->cpuMode == '5') {
-              inst1805(cpu);
+              inst1805(cpu, tr);
               break;
               }
             if (cpu->n <= 7) {
